@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="GO/VOID">
+  <defs>
+    <radialGradient id="void" cx="34%" cy="26%" r="88%">
+      <stop offset="0" stop-color="#211a45"/>
+      <stop offset="0.52" stop-color="#0b0818"/>
+      <stop offset="1" stop-color="#030207"/>
+    </radialGradient>
+    <linearGradient id="neon" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6af6ff"/>
+      <stop offset="0.58" stop-color="#8c7bff"/>
+      <stop offset="1" stop-color="#ff3f9f"/>
+    </linearGradient>
+    <radialGradient id="blackStone" cx="36%" cy="30%" r="76%">
+      <stop offset="0" stop-color="#6d7398"/>
+      <stop offset="0.3" stop-color="#252440"/>
+      <stop offset="0.72" stop-color="#080711"/>
+      <stop offset="1" stop-color="#000"/>
+    </radialGradient>
+    <radialGradient id="whiteStone" cx="34%" cy="28%" r="78%">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.42" stop-color="#e7e5f5"/>
+      <stop offset="0.78" stop-color="#a9a6c4"/>
+      <stop offset="1" stop-color="#6f6c8c"/>
+    </radialGradient>
+    <filter id="glow" x="-90%" y="-90%" width="280%" height="280%">
+      <feGaussianBlur stdDeviation="11" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <clipPath id="squircle">
+      <path d="M96 0h320c53 0 96 43 96 96v320c0 53-43 96-96 96H96c-53 0-96-43-96-96V96C0 43 43 0 96 0Z"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#squircle)">
+    <rect width="512" height="512" fill="url(#void)"/>
+
+    <g fill="#9ea6d8" opacity="0.5">
+      <circle cx="76" cy="92" r="2.4"/>
+      <circle cx="410" cy="70" r="1.8"/>
+      <circle cx="452" cy="178" r="2.6"/>
+      <circle cx="62" cy="286" r="1.7"/>
+      <circle cx="388" cy="430" r="2.2"/>
+      <circle cx="152" cy="438" r="1.6"/>
+      <circle cx="340" cy="122" r="1.4"/>
+      <circle cx="118" cy="192" r="1.3"/>
+      <circle cx="462" cy="338" r="1.5"/>
+    </g>
+
+    <circle cx="256" cy="262" r="186" fill="none" stroke="url(#neon)" stroke-width="2.5" opacity="0.28"/>
+    <circle cx="256" cy="262" r="154" fill="none" stroke="#6af6ff" stroke-width="1.2" opacity="0.16"/>
+
+    <g opacity="0.92">
+      <path d="M92 178h328M92 256h328M92 334h328" stroke="#6af6ff" stroke-width="1.6" opacity="0.18"/>
+      <path d="M178 92v328M256 92v328M334 92v328" stroke="#6af6ff" stroke-width="1.6" opacity="0.18"/>
+    </g>
+
+    <g filter="url(#soft)" opacity="0.52">
+      <circle cx="214" cy="252" r="74" fill="#6af6ff"/>
+      <circle cx="302" cy="300" r="74" fill="#ff3f9f"/>
+    </g>
+
+    <g filter="url(#glow)">
+      <circle cx="256" cy="258" r="112" fill="none" stroke="url(#neon)" stroke-width="3" opacity="0.55"/>
+    </g>
+
+    <ellipse cx="300" cy="336" rx="74" ry="21" fill="#010106" opacity="0.62"/>
+
+    <g>
+      <circle cx="207" cy="248" r="68" fill="url(#blackStone)"/>
+      <ellipse cx="182" cy="218" rx="22" ry="14" fill="#c9d4ff" opacity="0.24" transform="rotate(-32 182 218)"/>
+      <circle cx="207" cy="248" r="67" fill="none" stroke="#6af6ff" stroke-width="2.2" opacity="0.5"/>
+    </g>
+
+    <g>
+      <circle cx="305" cy="302" r="68" fill="url(#whiteStone)"/>
+      <ellipse cx="280" cy="272" rx="21" ry="13" fill="#fff" opacity="0.85" transform="rotate(-32 280 272)"/>
+      <circle cx="305" cy="302" r="67" fill="none" stroke="#ff3f9f" stroke-width="2.2" opacity="0.65"/>
+    </g>
+
+    <path d="M84 404 408 108" stroke="url(#neon)" stroke-width="10" stroke-linecap="round" opacity="0.8"/>
+    <path d="M104 414 422 120" stroke="#05040a" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+  </g>
+</svg>

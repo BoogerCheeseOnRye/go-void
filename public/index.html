@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <meta name="theme-color" content="#05040a">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="GO/VOID — a 3D Go duel in a neon void. Pass and play, fight the machine, or find a peer-to-peer match.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GO/VOID">
+  <title>GO/VOID — 3D Go</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="preload" href="/fonts/chakra-petch-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/space-grotesk-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <div id="app" class="app">
+    <canvas id="gl" class="gl" aria-hidden="true"></canvas>
+    <div class="screen-fx" aria-hidden="true">
+      <div class="fx-scanlines"></div>
+      <div class="fx-vignette"></div>
+    </div>
+
+    <div id="loading-screen" class="screen loading-screen">
+      <div class="loading-core">
+        <div class="loading-mark" aria-hidden="true">
+          <span class="load-stone load-stone-black"></span>
+          <span class="load-stone load-stone-white"></span>
+        </div>
+        <div class="loading-logo">GO<span>/</span>VOID</div>
+        <div class="loading-bar"><i></i></div>
+        <div id="load-status" class="loading-status">SPINNING UP THE VOID</div>
+      </div>
+    </div>
+
+    <main id="menu-screen" class="screen menu-screen" aria-label="Main menu">
+      <header class="menu-top">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand-name">GO/VOID</span>
+          <span class="brand-version">v1.0</span>
+        </div>
+        <nav class="menu-nav" aria-label="Information">
+          <button id="btn-rules" class="ghost-btn" type="button">RULES</button>
+          <button id="btn-settings" class="ghost-btn" type="button">SETTINGS</button>
+          <button id="btn-install" class="ghost-btn install-btn" type="button" hidden>INSTALL</button>
+        </nav>
+      </header>
+
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="eyebrow-line"></span> A 3D GO DUEL IN THE VOID <span class="eyebrow-line"></span></p>
+          <h1 class="logo" aria-label="GO VOID">
+            <span class="logo-go">GO</span><span class="logo-slash">/</span><span class="logo-void">VOID</span>
+            <span class="logo-ghost" aria-hidden="true">GO/VOID</span>
+          </h1>
+          <p class="tagline">Place stones. Break worlds.</p>
+          <p class="kanji-sub" aria-hidden="true">囲碁 <span>·</span> 無限</p>
+        </div>
+
+        <div class="menu-panel">
+          <div class="panel-row">
+            <span class="panel-label">BOARD</span>
+            <div class="segmented" id="size-select" role="group" aria-label="Board size">
+              <button type="button" data-size="9" class="seg-btn active" aria-pressed="true">9<span>×9</span></button>
+              <button type="button" data-size="13" class="seg-btn" aria-pressed="false">13<span>×13</span></button>
+              <button type="button" data-size="19" class="seg-btn" aria-pressed="false">19<span>×19</span></button>
+            </div>
+          </div>
+
+          <div class="mode-grid" id="mode-grid" role="radiogroup" aria-label="Game mode">
+            <button type="button" class="mode-card active" data-mode="local" role="radio" aria-checked="true">
+              <span class="mode-index">01</span>
+              <span class="mode-icon" aria-hidden="true">
+                <svg viewBox="0 0 42 42" fill="none"><circle cx="14" cy="21" r="7" fill="currentColor"/><circle cx="28" cy="21" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 7v28" stroke="currentColor" stroke-width="1" opacity=".3"/></svg>
+              </span>
+              <span class="mode-title">PASS &amp; PLAY</span>
+              <span class="mode-desc">Two players. One screen. No mercy.</span>
+              <span class="mode-tag">LOCAL</span>
+            </button>
+            <button type="button" class="mode-card" data-mode="ai" role="radio" aria-checked="false">
+              <span class="mode-index">02</span>
+              <span class="mode-icon" aria-hidden="true">
+                <svg viewBox="0 0 42 42" fill="none"><rect x="10" y="12" width="22" height="18" rx="4" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="21" r="2" fill="currentColor"/><circle cx="25" cy="21" r="2" fill="currentColor"/><path d="M15 26h12M21 12V7M14 7h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </span>
+              <span class="mode-title">VS MACHINE</span>
+              <span class="mode-desc">A tactician that never blinks.</span>
+              <span class="mode-tag">1P</span>
+            </button>
+            <button type="button" class="mode-card" data-mode="online" role="radio" aria-checked="false">
+              <span class="mode-index">03</span>
+              <span class="mode-icon" aria-hidden="true">
+                <svg viewBox="0 0 42 42" fill="none"><circle cx="13" cy="14" r="4" stroke="currentColor" stroke-width="2"/><circle cx="29" cy="14" r="4" stroke="currentColor" stroke-width="2"/><circle cx="21" cy="30" r="4" stroke="currentColor" stroke-width="2"/><path d="M16.5 16.5l3 9M25.5 16.5l-3 9M17 14h8" stroke="currentColor" stroke-width="1.5"/></svg>
+              </span>
+              <span class="mode-title">FIND MATCH</span>
+              <span class="mode-desc">Peer-to-peer. Find a rival fast.</span>
+              <span class="mode-tag">P2P</span>
+            </button>
+          </div>
+
+          <div id="ai-options" class="ai-options" hidden>
+            <div class="panel-row compact">
+              <span class="panel-label">AI</span>
+              <div class="segmented small" id="difficulty-select" role="group" aria-label="AI difficulty">
+                <button type="button" data-difficulty="easy" class="seg-btn">EASY</button>
+                <button type="button" data-difficulty="medium" class="seg-btn active" aria-pressed="true">MED</button>
+                <button type="button" data-difficulty="hard" class="seg-btn">HARD</button>
+                <button type="button" data-difficulty="insane" class="seg-btn">INSANE</button>
+              </div>
+            </div>
+            <div class="panel-row compact">
+              <span class="panel-label">STONE</span>
+              <div class="segmented small" id="color-select" role="group" aria-label="Your stone colour">
+                <button type="button" data-color="1" class="seg-btn active" aria-pressed="true">BLACK</button>
+                <button type="button" data-color="2" class="seg-btn">WHITE</button>
+                <button type="button" data-color="0" class="seg-btn">RANDOM</button>
+              </div>
+            </div>
+          </div>
+
+          <button id="start-btn" class="start-btn" type="button">
+            <span class="start-text">START DUEL</span>
+            <span class="start-arrow" aria-hidden="true">→</span>
+          </button>
+          <p id="menu-note" class="menu-note">LOCAL DUEL · 9×9 · CHINESE SCORING</p>
+        </div>
+      </section>
+
+      <footer class="menu-bottom">
+        <span>NO ADS <i></i> NO TRACKING <i></i> OPEN SOURCE</span>
+        <span class="footer-mid">BUILT FOR TOUCH</span>
+        <span>BLACK <b>·</b> WHITE <b>·</b> VOID</span>
+      </footer>
+    </main>
+
+    <section id="game-screen" class="screen game-screen hidden" aria-label="Go board">
+      <header class="hud-top">
+        <button id="btn-back-menu" class="icon-btn" type="button" aria-label="Back to menu">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="player-strip">
+          <div id="player-black" class="player-chip black active" aria-label="Black player">
+            <span class="chip-stone black"></span>
+            <span class="chip-copy"><b id="name-black">BLACK</b><em id="cap-black">0 CAPTURED</em></span>
+          </div>
+          <div class="turn-core" id="turn-core" aria-hidden="true">
+            <span class="turn-dot"></span><span class="turn-vs">VS</span><span class="turn-dot"></span>
+          </div>
+          <div id="player-white" class="player-chip white" aria-label="White player">
+            <span class="chip-copy right"><b id="name-white">WHITE</b><em id="cap-white">0 CAPTURED</em></span>
+            <span class="chip-stone white"></span>
+          </div>
+        </div>
+        <div class="hud-meta">
+          <span id="net-badge" class="net-badge hidden">P2P</span>
+          <span id="move-badge" class="move-badge">MOVE 0</span>
+        </div>
+      </header>
+
+      <div id="game-hint" class="game-hint" role="status">TAP AN INTERSECTION TO OPEN</div>
+      <div id="thinking" class="thinking hidden" aria-hidden="true">
+        <span class="think-dot"></span><span class="think-dot"></span><span class="think-dot"></span>
+        <span class="think-label">MACHINE THINKING</span>
+      </div>
+      <div id="score-preview" class="score-preview hidden" aria-live="polite"></div>
+
+      <footer class="hud-bottom">
+        <div class="action-bar" role="toolbar" aria-label="Game actions">
+          <button id="btn-pass" class="action-btn" type="button">
+            <span class="action-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span>PASS</span>
+          </button>
+          <button id="btn-undo" class="action-btn" type="button">
+            <span class="action-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M8 7H5v3M5.5 10a7 7 0 1 1 1.2 7.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span>UNDO</span>
+          </button>
+          <button id="btn-resign" class="action-btn danger" type="button">
+            <span class="action-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M6 4v16M6 5h11l-2.2 4L17 13H6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span>RESIGN</span>
+          </button>
+          <button id="btn-recenter" class="action-btn" type="button">
+            <span class="action-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="6" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+            <span>CAMERA</span>
+          </button>
+        </div>
+        <div id="net-status" class="net-status hidden">
+          <span class="net-led"></span>
+          <span id="net-status-text">P2P DIRECT</span>
+        </div>
+      </footer>
+    </section>
+
+    <div id="impact-layer" class="impact-layer" aria-hidden="true">
+      <div class="impact-lines"></div>
+      <div class="impact-glow"></div>
+      <div class="impact-type">
+        <span class="impact-kanji">取</span>
+        <span class="impact-word">CAPTURE</span>
+      </div>
+      <div class="impact-corners"><i></i><i></i><i></i><i></i></div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <div id="modal-root" class="modal-root hidden" aria-hidden="true">
+      <div class="modal-backdrop" data-modal-close></div>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <button id="modal-close" class="modal-close" type="button" aria-label="Close">×</button>
+        <div id="modal-content" class="modal-content"></div>
+      </div>
+    </div>
+
+    <div id="rotate-hint" class="rotate-hint hidden" aria-hidden="true">
+      <span>ROTATE FOR A WIDER VOID</span>
+    </div>
+  </div>
+
+  <template id="tpl-settings">
+    <h2 id="modal-title" class="modal-title">SETTINGS</h2>
+    <p class="modal-kicker">Tune the signal.</p>
+    <div class="setting-list">
+      <div class="setting-row">
+        <div><b>RENDER QUALITY</b><small>Bloom, dust and resolution</small></div>
+        <div class="segmented small" id="quality-select" role="group" aria-label="Render quality">
+          <button type="button" data-quality="auto" class="seg-btn active">AUTO</button>
+          <button type="button" data-quality="high" class="seg-btn">HIGH</button>
+          <button type="button" data-quality="low" class="seg-btn">LOW</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div><b>MOTION</b><small>Impact frames and camera shake</small></div>
+        <div class="segmented small" id="motion-select" role="group" aria-label="Motion">
+          <button type="button" data-motion="full" class="seg-btn active">FULL</button>
+          <button type="button" data-motion="reduced" class="seg-btn">REDUCED</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div><b>SOUND</b><small>Synthesised stone, void and impact</small></div>
+        <div class="segmented small" id="sound-select" role="group" aria-label="Sound">
+          <button type="button" data-sound="on" class="seg-btn active">ON</button>
+          <button type="button" data-sound="off" class="seg-btn">OFF</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div><b>HAPTICS</b><small>Impact vibration on supported phones</small></div>
+        <div class="segmented small" id="haptics-select" role="group" aria-label="Haptics">
+          <button type="button" data-haptics="on" class="seg-btn active">ON</button>
+          <button type="button" data-haptics="off" class="seg-btn">OFF</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button id="settings-done" class="solid-btn" type="button">DONE</button>
+    </div>
+  </template>
+
+  <template id="tpl-rules">
+    <h2 id="modal-title" class="modal-title">HOW TO GO</h2>
+    <p class="modal-kicker">Simple rules. Infinite violence.</p>
+    <div class="rules-copy">
+      <p><b>PLACE.</b> Black opens. Tap an intersection to place a stone. Stones never move.</p>
+      <p><b>CAPTURE.</b> A group dies when it has no empty neighbours. Surround it, then take its last liberty.</p>
+      <p><b>KO.</b> You cannot recreate the previous board position. Play elsewhere first.</p>
+      <p><b>WIN.</b> Two passes end the game. Area scoring: stones on the board plus empty territory you surround. White gets komi.</p>
+      <p><b>TOUCH.</b> Drag to orbit. Pinch to zoom. Tap to place. The camera button recenters.</p>
+    </div>
+    <div class="rules-key">
+      <span><i class="key-stone black"></i> BLACK</span>
+      <span><i class="key-stone white"></i> WHITE</span>
+      <span>CHINESE AREA · KOMPI 6.5 / 7.5</span>
+    </div>
+    <div class="modal-actions"><button class="solid-btn" data-modal-close type="button">UNDERSTOOD</button></div>
+  </template>
+
+  <template id="tpl-confirm">
+    <h2 id="modal-title" class="modal-title">CONFIRM</h2>
+    <p id="confirm-body" class="modal-kicker">Are you sure?</p>
+    <div class="modal-actions">
+      <button id="confirm-cancel" class="ghost-btn wide" type="button">CANCEL</button>
+      <button id="confirm-ok" class="solid-btn danger-solid" type="button">CONFIRM</button>
+    </div>
+  </template>
+
+  <template id="tpl-matchmaking">
+    <h2 id="modal-title" class="modal-title">FIND A RIVAL</h2>
+    <p id="match-kicker" class="modal-kicker">Scanning the void for a peer.</p>
+    <div class="match-visual" aria-hidden="true">
+      <div class="match-ring ring-1"></div>
+      <div class="match-ring ring-2"></div>
+      <div class="match-ring ring-3"></div>
+      <div class="match-core"><span class="match-stone black"></span><span class="match-stone white"></span></div>
+    </div>
+    <div id="match-status" class="match-status">
+      <span class="match-led"></span><span id="match-status-text">QUEUED · 9×9</span>
+    </div>
+    <div id="match-opponent" class="match-opponent hidden"></div>
+    <div class="modal-actions">
+      <button id="match-cancel" class="ghost-btn wide" type="button">CANCEL SEARCH</button>
+    </div>
+  </template>
+
+  <template id="tpl-result">
+    <p id="result-kicker" class="modal-kicker">THE VOID HAS DECIDED</p>
+    <h2 id="modal-title" class="result-title">BLACK WINS</h2>
+    <div class="result-score">
+      <div class="score-side black"><span>BLACK</span><b id="result-black">0</b><small id="result-black-detail">0 stones · 0 area</small></div>
+      <div class="score-vs">VS</div>
+      <div class="score-side white"><span>WHITE</span><b id="result-white">0</b><small id="result-white-detail">0 stones · 0 area</small></div>
+    </div>
+    <p id="result-margin" class="result-margin">BY 0.5 POINTS</p>
+    <div class="result-stats">
+      <span id="result-moves">0 MOVES</span><i></i><span id="result-caps">0 CAPTURES</span><i></i><span id="result-time">0:00</span>
+    </div>
+    <div class="modal-actions row">
+      <button id="result-menu" class="ghost-btn wide" type="button">MAIN MENU</button>
+      <button id="result-rematch" class="solid-btn" type="button">REMATCH</button>
+    </div>
+  </template>
+
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

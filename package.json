@@ -1,0 +1,37 @@
+{
+  "name": "go-void",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GO/VOID — a mobile-first 3D Go duel with neon WebGL2 visuals, local play, a tactical AI and peer-to-peer matchmaking.",
+  "type": "module",
+  "main": "server/server.mjs",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "start": "node server/server.mjs",
+    "dev": "node --watch server/server.mjs",
+    "test": "node --test tests/go.test.mjs tests/ai.test.mjs tests/security.test.mjs tests/net.test.mjs tests/server.test.mjs",
+    "test:core": "node --test tests/go.test.mjs tests/ai.test.mjs",
+    "test:e2e": "E2E=1 xvfb-run -a -s '-screen 0 1280x1024x24' node --test tests/e2e.test.mjs",
+    "test:all": "npm test && npm run test:e2e",
+    "icons": "node scripts/generate-icons.mjs"
+  },
+  "keywords": [
+    "go",
+    "baduk",
+    "weiqi",
+    "webgl2",
+    "p2p",
+    "game",
+    "pwa"
+  ],
+  "author": "GO/VOID contributors",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
+  }
+}
