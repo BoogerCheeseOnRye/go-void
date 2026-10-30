@@ -2,6 +2,8 @@
 
 A mobile-first 3D Go duel in a neon void. Place stones, break worlds.
 
+**Play it live:** <https://boogercheeseonrye.github.io/go-void/>
+
 - **Pass & Play** — two players, one phone.
 - **VS Machine** — a tactical AI in a Web Worker, four difficulty levels.
 - **Find Match** — peer-to-peer quick match with a server relay fallback (requires the relay server; see [GitHub Pages](#github-pages)).
@@ -45,11 +47,9 @@ Put the app behind TLS in production (`wss://`). The server is dependency-light 
 
 ## GitHub Pages
 
-The repository includes a Pages workflow that publishes `public/` on every push to `main`. All asset URLs are relative, so the site works at `https://<owner>.github.io/go-void/` as well as at a custom domain.
+The repository includes a Pages workflow that publishes `public/` on every push to `main`. All asset URLs are relative, so the site works at a project subpath as well as at a custom domain.
 
-```text
-https://<owner>.github.io/go-void/
-```
+The live site is <https://boogercheeseonrye.github.io/go-void/>.
 
 GitHub Pages is static: it can host local and AI duels, the PWA and the full interface, but it cannot run WebSockets. The online card shows **NO RELAY** until a matchmaking server is configured, and local/AI play remains fully available.
 
