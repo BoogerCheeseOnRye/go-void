@@ -4,9 +4,10 @@ A mobile-first 3D Go duel in a neon void. Place stones, break worlds.
 
 - **Pass & Play** — two players, one phone.
 - **VS Machine** — a tactical AI in a Web Worker, four difficulty levels.
-- **Find Match** — peer-to-peer quick match with a server relay fallback.
+- **Find Match** — peer-to-peer quick match with a server relay fallback (requires the relay server; see [GitHub Pages](#github-pages)).
 - **Real 3D board** — a hand-written WebGL2 renderer: instanced stones, soft shadows, bloom, particles, impact frames and a procedural soundtrack. No Three.js, no game framework, no runtime UI library.
 - **Installable PWA** — the shell and all assets are cached, so local and AI duels work offline.
+- **Portable static build** — relative URLs and a versioned service worker let the same files deploy to GitHub Pages, a subpath or a custom domain.
 
 ![GO/VOID menu](docs/menu.png)
 ![GO/VOID board](docs/game.png)
@@ -41,6 +42,51 @@ PORT=8080 ALLOWED_ORIGINS=https://go.example npm start
 ```
 
 Put the app behind TLS in production (`wss://`). The server is dependency-light (`ws` only) and keeps all match state in memory.
+
+## GitHub Pages
+
+The repository includes a Pages workflow that publishes `public/` on every push to `main`. All asset URLs are relative, so the site works at `https://<owner>.github.io/go-void/` as well as at a custom domain.
+
+```text
+https://<owner>.github.io/go-void/
+```
+
+GitHub Pages is static: it can host local and AI duels, the PWA and the full interface, but it cannot run WebSockets. The online card shows **NO RELAY** until a matchmaking server is configured, and local/AI play remains fully available.
+
+To enable online duels on Pages:
+
+1. Deploy the relay from this repository over HTTPS (Docker example below), with the Pages origin allowed:
+   ```bash
+   docker build -t go-void .
+   docker run --rm -p 4173:4173 \
+     -e ALLOWED_ORIGINS=https://<owner>.github.io \
+     go-void
+   ```
+   Put it behind a TLS reverse proxy so the public endpoint is `wss://relay.example/ws`.
+2. In the GitHub repository, open **Settings → Secrets and variables → Actions → Variables**, create `GO_VOID_RELAY_URL` with the exact `wss://relay.example/ws` URL, then re-run **Deploy GitHub Pages**.
+3. Add every Pages origin you use to `ALLOWED_ORIGINS`; comma-separate multiple origins.
+
+The workflow writes `public/config.js` with the configured URL and disables same-origin relay probing. Without the variable it generates an empty relay URL, which is why the Pages build degrades cleanly to local/AI play.
+
+`config.js` is also the runtime switch for any static host:
+
+```js
+window.GO_VOID_CONFIG = Object.freeze({
+  relayUrl: 'wss://relay.example/ws',
+  sameOriginRelay: false,
+});
+```
+
+Set `sameOriginRelay: true` only when the page and the relay share an origin, as they do under `npm start`.
+
+### Docker
+
+The included `Dockerfile` runs the combined static site and matchmaking relay as an unprivileged Node process:
+
+```bash
+docker build -t go-void .
+docker run --rm -p 4173:4173 -e ALLOWED_ORIGINS=https://<owner>.github.io go-void
+```
 
 ## Controls
 
@@ -81,7 +127,8 @@ public/
   js/main.js              menu flow, touch input, HUD, scoring and match state
   js/audio.js             procedural WebAudio soundscape and haptics
   js/impact.js            capture/atari/win/lose impact frames
-  sw.js                   versioned offline cache
+  config.js               optional static-host relay configuration
+  sw.js                   versioned, scope-relative offline cache
 server/
   server.mjs              HTTP + WebSocket entry point
   matchmaking.mjs         queues, rooms, relay, heartbeat and rate limits
@@ -97,7 +144,7 @@ Quality auto-scales resolution and effects; **Settings → Render Quality** can 
 
 ### Matchmaking and P2P
 
-1. Both clients connect to `/ws` and join a queue for the chosen board size.
+1. Both clients connect to the configured relay (same-origin `/ws` under `npm start`) and join a queue for the chosen board size.
 2. The server pairs them, assigns colors and an initiator, and passes WebRTC offers/answers/ICE candidates.
 3. An ordered DataChannel carries moves, passes, resignations and rematch offers.
 4. If ICE fails or takes longer than 5.2 seconds, the same validated messages flow through the WebSocket relay. Add `?relay=1` to force relay mode.
@@ -122,17 +169,18 @@ The end-to-end suite requires headed Chromium because the headless shell in this
 E2E=1 xvfb-run -a -s '-screen 0 1280x1024x24' node --test tests/e2e.test.mjs
 ```
 
-`npm run test:e2e` does this for you. It covers menu boot, local play, scoring, result/rematch, settings persistence, AI replies and undo, relay matchmaking, move sync, resignation, rematch, online score consensus, and offline PWA startup.
+`npm run test:e2e` does this for you. It covers menu boot, local play, scoring, result/rematch, settings persistence, AI replies and undo, relay matchmaking, move sync, resignation, rematch, online score consensus, static subpath hosting with relative assets, and offline PWA startup.
 
 `npm audit --omit=dev` reports no known vulnerabilities in the production dependency tree.
 
 ## Security
 
-See [SECURITY.md](SECURITY.md) for the threat model, headers, validation, and reporting instructions. In short: strict CSP, same-origin WebSocket policy, per-IP limits, token-bucket rate limiting, size-capped validated messages, sanitized display names and no user HTML.
+See [SECURITY.md](SECURITY.md) for the threat model, headers, validation, and reporting instructions. In short: strict CSP, same-origin WebSocket policy, per-IP limits, token-bucket rate limiting, size-capped validated messages, sanitized display names and no user HTML. GitHub Pages cannot send custom HTTP headers, so the static build also ships a restrictive CSP and referrer policy in `index.html`; use the Node/container deployment when you need the full header set.
 
 ## Notes
 
 - The game needs WebGL2. On unsupported devices the loading screen explains the requirement rather than showing a broken board.
 - WebRTC exposes each peer's IP to the other peer, as with any direct P2P game. Use `?relay=1` or disable WebRTC if that matters.
+- GitHub Pages cannot host the WebSocket relay. Online play on Pages requires a separately hosted relay and the `GO_VOID_RELAY_URL` Actions variable; without it the online card is shown as **NO RELAY**.
 - Fonts are Chakra Petch and Space Grotesk, licensed under the SIL Open Font License (see `public/fonts/`).
 - The code is MIT licensed.

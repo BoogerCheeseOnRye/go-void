@@ -59,6 +59,7 @@ export class NetClient {
   constructor(options = {}) {
     this.name = options.name || randomCallsign();
     this.forceRelay = options.forceRelay === true;
+    this.url = typeof options.url === 'string' && options.url ? options.url : null;
     this.listeners = new Map();
     this.ws = null;
     this.clientId = null;
@@ -107,9 +108,10 @@ export class NetClient {
       this._connectReject = reject;
     });
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const url = this.url || `${protocol}//${location.host}/ws`;
     let ws;
     try {
-      ws = new WebSocket(`${protocol}//${location.host}/ws`);
+      ws = new WebSocket(url);
     } catch (err) {
       this._connectReject?.(err);
       return this._connectPromise;
@@ -262,7 +264,9 @@ export class NetClient {
     this.boardSize = msg.boardSize;
     this.opponentId = typeof msg.opponent?.id === 'string' ? msg.opponent.id : null;
     this.peerName =
-      typeof msg.opponent?.name === 'string' ? msg.opponent.name.slice(0, 14) : 'RIVAL';
+      typeof msg.opponent?.name === 'string'
+        ? Array.from(msg.opponent.name).slice(0, 14).join('')
+        : 'RIVAL';
     const iceServers = Array.isArray(msg.iceServers) ? msg.iceServers.slice(0, 8) : [];
     this.emit('matched', {
       boardSize: this.boardSize,

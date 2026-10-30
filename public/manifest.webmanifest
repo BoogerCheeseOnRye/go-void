@@ -2,9 +2,9 @@
   "name": "GO/VOID — 3D Go",
   "short_name": "GO/VOID",
   "description": "A neon 3D Go duel in the void. Pass and play, fight the machine, or find a peer-to-peer rival.",
-  "id": "/",
-  "start_url": "/",
-  "scope": "/",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone"],
   "orientation": "any",
@@ -15,25 +15,25 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "/icons/icon.svg",
+      "src": "./icons/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-192.png",
+      "src": "./icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "./icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-maskable-512.png",
+      "src": "./icons/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -44,15 +44,15 @@
       "name": "Pass & Play",
       "short_name": "Local",
       "description": "Start a local two-player duel",
-      "url": "/?mode=local&start=1",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+      "url": "./?mode=local&start=1",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Fight the Machine",
       "short_name": "VS AI",
       "description": "Start a duel against the machine",
-      "url": "/?mode=ai&start=1",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+      "url": "./?mode=ai&start=1",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

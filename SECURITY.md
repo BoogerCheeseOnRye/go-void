@@ -22,15 +22,15 @@ The relay is not a rules authority. A malicious peer can send any sequence of le
 
 ### Transport and headers
 
-- Strict Content Security Policy: `default-src 'self'`, `script-src 'self'`, `style-src 'self'`, `worker-src 'self'`, `object-src 'none'`, `base-uri 'none'`, `frame-ancestors 'none'`.
-- `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, restrictive `Permissions-Policy`, `Cross-Origin-Resource-Policy: same-origin`, `Cross-Origin-Opener-Policy: same-origin`.
+- Strict Content Security Policy: `default-src 'self'`, `script-src 'self'`, `style-src 'self'`, `worker-src 'self'`, `object-src 'none'`, `base-uri 'none'`, `frame-ancestors 'none'`. The static build also carries a restrictive CSP and `no-referrer` policy in `index.html`, because GitHub Pages cannot set response headers.
+- `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, restrictive `Permissions-Policy`, `Cross-Origin-Resource-Policy: same-origin`, `Cross-Origin-Opener-Policy: same-origin` from the Node server.
 - No inline scripts or styles. Display names are inserted with `textContent`, never HTML.
 - Static serving resolves paths inside `public/` and rejects traversal, NUL bytes, backslashes and dotfiles. Unknown extensions are served as `application/octet-stream`.
-- The service worker caches only static shell assets; it never intercepts `/ws`, `/api/*` or `/healthz`.
+- The service worker caches only static shell assets. Its scope is relative to the deployment path, it never intercepts `/ws`, `/api/*` or `/healthz`, and its cache keys are derived from `self.location`, so a subpath deployment cannot poison a root deployment.
 
 ### WebSocket and matchmaking
 
-- Origin checks: missing origins are accepted for non-browser clients; browser origins must be same-host, localhost/loopback, a private LAN address, or explicitly listed in `ALLOWED_ORIGINS`. When `ALLOWED_ORIGINS` is set, only those origins are accepted.
+- Origin checks: missing origins are accepted for non-browser clients; browser origins must be same-host, localhost/loopback, a private LAN address, or explicitly listed in `ALLOWED_ORIGINS`. When `ALLOWED_ORIGINS` is set, only those origins are accepted. A static frontend using a cross-origin relay (for example GitHub Pages) must list its exact origin, such as `https://owner.github.io`, on the relay.
 - WebSocket upgrades are limited to `/ws`; all other paths return `404`.
 - `ws` is configured with an 8 KiB max payload, no compression (`perMessageDeflate: false`), and connection/heartbeat limits.
 - Per-IP connection cap (12) and global client cap (500); queues cap at 200 per board size.
@@ -44,7 +44,7 @@ The relay is not a rules authority. A malicious peer can send any sequence of le
 
 - All game messages from the network are shape-checked before they reach the rules engine (`public/js/net.js`), and the engine re-checks legality, sequence and turn.
 - The AI worker validates its input and runs with no network or DOM access.
-- WebRTC uses an ordered data channel and falls back to the relay on ICE failure. Relay messages are still validated by the peer.
+- WebRTC uses an ordered data channel and falls back to the relay on ICE failure. Relay messages are still validated by the peer. Static hosting reads an optional `wss://` relay URL from `config.js`; the Pages workflow refuses non-`wss` URLs to avoid mixed-content downgrades.
 - `npm audit --omit=dev` is part of the release checklist and currently reports zero vulnerabilities. The only production dependency is `ws`.
 
 ## Residual risks
@@ -54,12 +54,15 @@ The relay is not a rules authority. A malicious peer can send any sequence of le
 - **In-memory rooms.** A restart drops all matches. This is intentional and limits stored data.
 - **Denial of service.** Rate and size limits reduce abuse, but a very large distributed flood can still exhaust the single Node process. Put a reverse proxy with connection limits in front in production.
 - **Third-party STUN.** The default ICE configuration uses public STUN servers. Configure your own for privacy or strict networks.
+- **Header-limited static hosting.** GitHub Pages cannot apply `X-Frame-Options`, HSTS, COOP/CORP or a `Permissions-Policy`. The meta CSP and referrer policy cover the main content risks, but serve the Node/Docker build when full response-header control is required.
+- **Public relay endpoint.** The matchmaking URL in a static build is public. Protect the relay with TLS, origin allowlisting, rate limits and a reverse proxy; do not add secrets to `config.js`.
 
 ## Deployment checklist
 
 - Serve over HTTPS/WSS; never ship game traffic over plain HTTP outside localhost/LAN testing.
 - Set `ALLOWED_ORIGINS` to the exact public origin(s), including `https://`.
 - Add a TURN server to `ICE_SERVERS` if players may be behind symmetric NAT.
+- For GitHub Pages, set the `GO_VOID_RELAY_URL` Actions variable to a `wss://` endpoint and add the Pages origin to `ALLOWED_ORIGINS`.
 - Configure a reverse proxy timeout appropriate for WebSockets and set conservative connection limits.
 - Run as an unprivileged user and keep Node and `ws` patched.
 - Run `npm audit --omit=dev` and `npm test` before deploying.

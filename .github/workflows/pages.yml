@@ -1,0 +1,58 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate runtime relay configuration
+        env:
+          RELAY_URL: ${{ vars.GO_VOID_RELAY_URL }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { writeFileSync } from 'node:fs';
+          const relay = (process.env.RELAY_URL || '').trim();
+          if (relay && !relay.startsWith('wss://')) {
+            throw new Error('GO_VOID_RELAY_URL must be a wss:// URL for GitHub Pages');
+          }
+          writeFileSync(
+            'public/config.js',
+            `window.GO_VOID_CONFIG = Object.freeze(${JSON.stringify({
+              relayUrl: relay,
+              sameOriginRelay: false,
+            })});\n`,
+          );
+          NODE
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: public
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

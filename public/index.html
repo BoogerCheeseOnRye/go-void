@@ -6,17 +6,20 @@
   <meta name="theme-color" content="#05040a">
   <meta name="color-scheme" content="dark">
   <meta name="description" content="GO/VOID — a 3D Go duel in a neon void. Pass and play, fight the machine, or find a peer-to-peer match.">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' ws: wss:; media-src 'self' blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GO/VOID">
   <title>GO/VOID — 3D Go</title>
-  <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/icons/icon-192.png">
-  <link rel="preload" href="/fonts/chakra-petch-700.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/fonts/space-grotesk-400.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/app.css">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="preload" href="./fonts/chakra-petch-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./fonts/space-grotesk-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./app.css">
+  <script src="./config.js"></script>
 </head>
 <body>
   <div id="app" class="app">
@@ -322,6 +325,6 @@
     </div>
   </template>
 
-  <script type="module" src="/js/main.js"></script>
+  <script type="module" src="./js/main.js"></script>
 </body>
 </html>

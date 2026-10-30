@@ -21,9 +21,9 @@ export function sanitizeName(input, fallback = 'Ronin') {
     .normalize('NFKC')
     .replace(CONTROL, '')
     .replace(NAME_ALLOWED, '')
-    .trim()
-    .slice(0, MAX_NAME_LENGTH);
-  return cleaned.length >= 1 ? cleaned : fallback;
+    .trim();
+  const value = Array.from(cleaned).slice(0, MAX_NAME_LENGTH).join('');
+  return value.length >= 1 ? value : fallback;
 }
 
 export function stableHash(value) {
@@ -143,10 +143,11 @@ export function validMovePayload(payload) {
       payload.seq >= 0 &&
       payload.seq < 1_000_000 &&
       Number.isInteger(payload.index) &&
-      payload.index >= -1 &&
+      payload.index >= 0 &&
       payload.index < 361 &&
       (payload.color === 1 || payload.color === 2) &&
-      (payload.hash === undefined || typeof payload.hash === 'string')
+      (payload.hash === undefined ||
+        (typeof payload.hash === 'string' && payload.hash.length <= 16))
     );
   }
   if (type === 'pass') {

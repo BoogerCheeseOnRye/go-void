@@ -19,6 +19,7 @@ test('sanitizeName strips controls and markup characters', () => {
   assert.equal(sanitizeName(''), 'Ronin');
   assert.equal(sanitizeName(null), 'Ronin');
   assert.equal(sanitizeName('x'.repeat(80)).length, MAX_NAME_LENGTH);
+  assert.equal(Array.from(sanitizeName('\u{20000}'.repeat(30))).length, MAX_NAME_LENGTH);
 });
 
 test('isAllowedOrigin enforces local and configured origins', () => {
@@ -52,7 +53,10 @@ test('move payload validation rejects malformed and oversized values', () => {
   assert.equal(validMovePayload({ type: 'move', seq: 1, index: 40, color: 1, hash: 'abc' }), true);
   assert.equal(validMovePayload({ type: 'move', seq: 1, index: 40, color: 3 }), false);
   assert.equal(validMovePayload({ type: 'move', seq: -1, index: 40, color: 1 }), false);
+  assert.equal(validMovePayload({ type: 'move', seq: 1, index: -1, color: 1 }), false);
   assert.equal(validMovePayload({ type: 'move', seq: 1, index: 361, color: 1 }), false);
+  assert.equal(validMovePayload({ type: 'move', seq: 1, index: 40, color: 1, hash: 'x'.repeat(17) }), false);
+  assert.equal(validMovePayload({ type: 'move', seq: 1, index: 40, color: 1, hash: 'x'.repeat(16) }), true);
   assert.equal(validMovePayload({ type: 'move', seq: 1.5, index: 40, color: 1 }), false);
   assert.equal(validMovePayload({ type: 'pass', seq: 1, color: 2 }), true);
   assert.equal(validMovePayload({ type: 'resign' }), true);

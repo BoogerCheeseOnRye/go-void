@@ -46,11 +46,33 @@ function loadSettings() {
   return out;
 }
 
+function resolveRelayUrl() {
+  const config = (typeof window !== 'undefined' && window.GO_VOID_CONFIG) || {};
+  const configured = typeof config.relayUrl === 'string' ? config.relayUrl.trim() : '';
+  if (configured) {
+    try {
+      const url = new URL(configured, location.href);
+      if (url.protocol !== 'ws:' && url.protocol !== 'wss:') return null;
+      if (location.protocol === 'https:' && url.protocol === 'ws:') return null;
+      return url.href;
+    } catch {
+      return null;
+    }
+  }
+  if (config.sameOriginRelay !== true) return null;
+  if (location.protocol !== 'http:' && location.protocol !== 'https:') return null;
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${protocol}//${location.host}/ws`;
+}
+
 const settings = loadSettings();
 const mediaReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 const bootParams = new URLSearchParams(location.search);
 const queryMode = bootParams.get('mode');
 if (['local', 'ai', 'online'].includes(queryMode)) settings.mode = queryMode;
+const RELAY_URL = resolveRelayUrl();
+const ONLINE_AVAILABLE = Boolean(RELAY_URL);
+if (!ONLINE_AVAILABLE && settings.mode === 'online') settings.mode = 'local';
 
 const state = {
   screen: 'menu',
@@ -198,7 +220,7 @@ function updateMenuNote() {
   const labels = { local: 'LOCAL DUEL', ai: 'VS MACHINE', online: 'P2P MATCH' };
   let note = `${labels[state.mode] || 'DUEL'} · ${settings.size}×${settings.size} · CHINESE SCORING`;
   if (state.mode === 'ai') note += ` · ${settings.difficulty.toUpperCase()}`;
-  if (state.mode === 'online') note += ' · QUICK MATCH';
+  if (state.mode === 'online') note += ONLINE_AVAILABLE ? ' · QUICK MATCH' : ' · RELAY OFFLINE';
   el.menuNote.textContent = note;
 }
 
@@ -212,6 +234,14 @@ function applySettingsToUI() {
   setSegment(el.difficultySelect, 'difficulty', settings.difficulty);
   setSegment(el.colorSelect, 'color', settings.color);
   if (el.aiOptions) el.aiOptions.hidden = settings.mode !== 'ai';
+  const onlineCard = el.modeGrid?.querySelector('[data-mode="online"]');
+  if (onlineCard) {
+    onlineCard.classList.toggle('unavailable', !ONLINE_AVAILABLE);
+    onlineCard.dataset.unavailable = String(!ONLINE_AVAILABLE);
+    onlineCard.title = ONLINE_AVAILABLE ? '' : 'Deploy the relay server and set relayUrl in config.js';
+    const tag = onlineCard.querySelector('.mode-tag');
+    if (tag) tag.textContent = ONLINE_AVAILABLE ? 'P2P' : 'NO RELAY';
+  }
   document.documentElement.classList.toggle('reduced-motion', isReducedMotion());
   if (renderer) {
     renderer.setQuality(settings.quality);
@@ -345,6 +375,10 @@ function bindMenu() {
     if (!card) return;
     const mode = card.dataset.mode;
     if (!['local', 'ai', 'online'].includes(mode)) return;
+    if (mode === 'online' && !ONLINE_AVAILABLE) {
+      toast('ONLINE DUELS NEED THE RELAY SERVER · SEE README', true);
+      return;
+    }
     settings.mode = mode;
     state.mode = mode;
     setSegment(el.modeGrid, 'mode', mode);
@@ -382,8 +416,13 @@ function bindMenu() {
   el.startBtn?.addEventListener('click', () => {
     sound.unlock();
     sound.ui();
-    if (state.mode === 'online') startMatchmaking();
-    else if (state.mode === 'ai') startAiGame();
+    if (state.mode === 'online') {
+      if (!ONLINE_AVAILABLE) {
+        toast('ONLINE DUELS NEED THE RELAY SERVER · SEE README', true);
+        return;
+      }
+      startMatchmaking();
+    } else if (state.mode === 'ai') startAiGame();
     else startLocalGame();
   });
 
@@ -1305,6 +1344,10 @@ function showMatchOpponent(name) {
 
 function startMatchmaking() {
   if (state.screen === 'game') return;
+  if (!ONLINE_AVAILABLE || !RELAY_URL) {
+    toast('ONLINE DUELS NEED THE RELAY SERVER · SEE README', true);
+    return;
+  }
   state.mode = 'online';
   state.boardSize = settings.size;
   state.finished = false;
@@ -1314,7 +1357,7 @@ function startMatchmaking() {
     state.net = null;
   }
   const params = new URLSearchParams(location.search);
-  const net = new NetClient({ forceRelay: params.get('relay') === '1' });
+  const net = new NetClient({ forceRelay: params.get('relay') === '1', url: RELAY_URL });
   state.net = net;
   attachNetHandlers(net);
 
@@ -1789,7 +1832,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (new URLSearchParams(location.search).get('nosw') === '1') return;
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((err) => {
+    navigator.serviceWorker.register('./sw.js').catch((err) => {
       console.warn('[sw]', err?.message || err);
     });
   });

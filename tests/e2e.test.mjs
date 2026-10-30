@@ -3,6 +3,9 @@
 
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
+import { readFile, stat } from 'node:fs/promises';
+import { extname, join, resolve } from 'node:path';
 import { chromium } from 'playwright';
 import { createGameServer } from '../server/server.mjs';
 
@@ -70,7 +73,7 @@ maybe('menu boots with a live WebGL2 renderer and clean console', async () => {
   assert.equal(info.gl, true);
   assert.equal(info.loadingGone, true);
   assert.equal(info.startEnabled, true);
-  assert.equal(info.manifest, '/manifest.webmanifest');
+  assert.equal(info.manifest, './manifest.webmanifest');
   assert.deepEqual(errors, []);
   await context.close();
 });
@@ -346,6 +349,102 @@ maybe('online scoring waits for both players and agrees on dead stones', async (
   await ctxB.close();
 });
 
+maybe('static subpath hosting boots with relative assets and no relay', async () => {
+  const publicDir = resolve('public');
+  const mime = {
+    '.html': 'text/html; charset=utf-8',
+    '.js': 'text/javascript; charset=utf-8',
+    '.css': 'text/css; charset=utf-8',
+    '.webmanifest': 'application/manifest+json; charset=utf-8',
+    '.svg': 'image/svg+xml',
+    '.png': 'image/png',
+    '.woff2': 'font/woff2',
+  };
+  const pages = createServer(async (req, res) => {
+    const url = new URL(req.url || '/', 'http://localhost');
+    if (!url.pathname.startsWith('/go-void/')) {
+      res.writeHead(404);
+      res.end('Not Found');
+      return;
+    }
+    if (url.pathname === '/go-void/config.js') {
+      res.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' });
+      res.end("window.GO_VOID_CONFIG = Object.freeze({ relayUrl: '', sameOriginRelay: false });\n");
+      return;
+    }
+    const rel = url.pathname.slice('/go-void/'.length) || 'index.html';
+    const file = join(publicDir, rel.endsWith('/') ? `${rel}index.html` : rel);
+    try {
+      const info = await stat(file);
+      if (!info.isFile()) throw new Error('not a file');
+      res.writeHead(200, {
+        'Content-Type': mime[extname(file)] || 'application/octet-stream',
+        'Cache-Control': 'no-cache',
+      });
+      res.end(await readFile(file));
+    } catch {
+      res.writeHead(404);
+      res.end('Not Found');
+    }
+  });
+  await new Promise((done) => pages.listen(0, '127.0.0.1', done));
+  const port = pages.address().port;
+  const pageBase = `http://127.0.0.1:${port}/go-void/`;
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (err) => errors.push(`pageerror: ${err.message}`));
+  page.on('console', (msg) => {
+    if (msg.type() === 'error' && !msg.text().includes('Failed to load resource')) {
+      errors.push(`console: ${msg.text()}`);
+    }
+  });
+
+  await page.goto(pageBase, { waitUntil: 'networkidle' });
+  await page.waitForFunction(() => window.__goVoid?.state?.booted, null, { timeout: 20_000 });
+  const info = await page.evaluate(() => ({
+    href: location.href,
+    manifest: document.querySelector('link[rel=manifest]')?.getAttribute('href'),
+    onlineTag: document.querySelector('[data-mode="online"] .mode-tag')?.textContent,
+    unavailable: document.querySelector('[data-mode="online"]')?.dataset.unavailable,
+  }));
+  assert.equal(info.href, pageBase);
+  assert.equal(info.manifest, './manifest.webmanifest');
+  assert.equal(info.onlineTag, 'NO RELAY');
+  assert.equal(info.unavailable, 'true');
+
+  await page.locator('[data-mode="online"]').click();
+  await page.waitForTimeout(150);
+  assert.match(await page.locator('#toast').innerText(), /RELAY SERVER/);
+  await page.locator('#start-btn').click();
+  await page.waitForFunction(() => window.__goVoid.state.screen === 'game');
+  await page.waitForTimeout(500);
+
+  const sw = await page.evaluate(async () => {
+    const reg = await navigator.serviceWorker.ready;
+    const keys = await caches.open('go-void-v3').then((cache) => cache.keys());
+    return {
+      scope: reg.scope,
+      hasMain: keys.some((request) => new URL(request.url).pathname.endsWith('/js/main.js')),
+    };
+  });
+  assert.equal(sw.scope, pageBase);
+  assert.equal(sw.hasMain, true);
+
+  await context.setOffline(true);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => window.__goVoid?.state?.booted, null, { timeout: 20_000 });
+  assert.equal(await page.evaluate(() => window.__goVoid.state.screen), 'menu');
+  await context.setOffline(false);
+  assert.deepEqual(errors, []);
+  await context.close();
+  await new Promise((done) => pages.close(done));
+});
+
 maybe('service worker serves the shell offline', async () => {
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
@@ -356,10 +455,10 @@ maybe('service worker serves the shell offline', async () => {
   await page.evaluate(async () => {
     const reg = await navigator.serviceWorker.ready;
     if (!reg.active) throw new Error('service worker did not activate');
-    await caches.open('go-void-v2').then((cache) => cache.add('/manifest.webmanifest'));
+    await caches.open('go-void-v3').then((cache) => cache.add('/manifest.webmanifest'));
   });
   const cached = await page.evaluate(async () =>
-    (await (await caches.open('go-void-v2')).keys()).map((request) => request.url),
+    (await (await caches.open('go-void-v3')).keys()).map((request) => request.url),
   );
   assert.equal(cached.some((url) => new URL(url).pathname === '/js/main.js'), true);
 

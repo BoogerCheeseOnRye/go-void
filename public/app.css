@@ -3,42 +3,42 @@
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url('/fonts/chakra-petch-500.woff2') format('woff2');
+  src: url('./fonts/chakra-petch-500.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Chakra Petch';
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url('/fonts/chakra-petch-600.woff2') format('woff2');
+  src: url('./fonts/chakra-petch-600.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Chakra Petch';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('/fonts/chakra-petch-700.woff2') format('woff2');
+  src: url('./fonts/chakra-petch-700.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Space Grotesk';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('/fonts/space-grotesk-400.woff2') format('woff2');
+  src: url('./fonts/space-grotesk-400.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Space Grotesk';
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url('/fonts/space-grotesk-500.woff2') format('woff2');
+  src: url('./fonts/space-grotesk-500.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Space Grotesk';
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url('/fonts/space-grotesk-600.woff2') format('woff2');
+  src: url('./fonts/space-grotesk-600.woff2') format('woff2');
 }
 
 :root {
@@ -612,6 +612,22 @@ button:active {
     0 0 0 1px rgba(106, 246, 255, 0.12) inset,
     0 0 34px rgba(106, 246, 255, 0.08),
     0 18px 40px rgba(0, 0, 0, 0.4);
+}
+
+.mode-card.unavailable {
+  opacity: 0.55;
+  filter: grayscale(0.35);
+}
+
+.mode-card.unavailable:hover {
+  transform: none;
+  border-color: rgba(160, 200, 255, 0.11);
+  box-shadow: none;
+}
+
+.mode-card.unavailable .mode-tag {
+  color: var(--magenta);
+  border-color: rgba(255, 74, 176, 0.35);
 }
 
 .mode-index {

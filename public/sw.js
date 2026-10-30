@@ -1,34 +1,39 @@
-/* GO/VOID service worker — offline shell for local and AI duels. */
+/* GO/VOID service worker — portable offline shell for local and AI duels. */
 
-const VERSION = 'go-void-v2';
+const VERSION = 'go-void-v3';
+const BASE = new URL('./', self.location.href);
+const INDEX_URL = new URL('index.html', BASE).href;
+const CONFIG_URL = new URL('config.js', BASE).href;
+
 const SHELL = [
-  '/',
-  '/index.html',
-  '/app.css',
-  '/manifest.webmanifest',
-  '/js/main.js',
-  '/js/audio.js',
-  '/js/impact.js',
-  '/js/net.js',
-  '/js/core/go.js',
-  '/js/core/ai.js',
-  '/js/render/math.js',
-  '/js/render/gl.js',
-  '/js/render/camera.js',
-  '/js/render/shaders.js',
-  '/js/render/renderer.js',
-  '/js/workers/ai-worker.js',
-  '/fonts/chakra-petch-500.woff2',
-  '/fonts/chakra-petch-600.woff2',
-  '/fonts/chakra-petch-700.woff2',
-  '/fonts/space-grotesk-400.woff2',
-  '/fonts/space-grotesk-500.woff2',
-  '/fonts/space-grotesk-600.woff2',
-  '/icons/icon.svg',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/icons/icon-maskable-512.png',
-];
+  '',
+  'index.html',
+  'config.js',
+  'app.css',
+  'manifest.webmanifest',
+  'js/main.js',
+  'js/audio.js',
+  'js/impact.js',
+  'js/net.js',
+  'js/core/go.js',
+  'js/core/ai.js',
+  'js/render/math.js',
+  'js/render/gl.js',
+  'js/render/camera.js',
+  'js/render/shaders.js',
+  'js/render/renderer.js',
+  'js/workers/ai-worker.js',
+  'fonts/chakra-petch-500.woff2',
+  'fonts/chakra-petch-600.woff2',
+  'fonts/chakra-petch-700.woff2',
+  'fonts/space-grotesk-400.woff2',
+  'fonts/space-grotesk-500.woff2',
+  'fonts/space-grotesk-600.woff2',
+  'icons/icon.svg',
+  'icons/icon-192.png',
+  'icons/icon-512.png',
+  'icons/icon-maskable-512.png',
+].map((path) => new URL(path, BASE).href);
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -70,11 +75,13 @@ self.addEventListener('fetch', (event) => {
       (async () => {
         try {
           const fresh = await fetch(request);
-          const cache = await caches.open(VERSION);
-          cache.put('/index.html', fresh.clone()).catch(() => {});
+          if (fresh && fresh.ok) {
+            const cache = await caches.open(VERSION);
+            cache.put(INDEX_URL, fresh.clone()).catch(() => {});
+          }
           return fresh;
         } catch {
-          const cached = await caches.match('/index.html');
+          const cached = await caches.match(INDEX_URL);
           return cached || Response.error();
         }
       })(),
@@ -85,6 +92,20 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     (async () => {
       const cache = await caches.open(VERSION);
+
+      // Network-first so a redeployed relay URL is picked up promptly.
+      if (url.href === CONFIG_URL) {
+        try {
+          const fresh = await fetch(request);
+          if (fresh && fresh.ok && fresh.type === 'basic') {
+            cache.put(request, fresh.clone()).catch(() => {});
+          }
+          return fresh;
+        } catch {
+          return (await cache.match(request)) || Response.error();
+        }
+      }
+
       const cached = await cache.match(request, { ignoreSearch: false });
       const network = fetch(request)
         .then((response) => {
