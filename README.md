@@ -8,7 +8,7 @@ A mobile-first 3D Go duel in a neon void. Place stones, break worlds.
 - **VS Machine** — a tactical AI in a Web Worker, four difficulty levels.
 - **Find Match** — peer-to-peer quick match with a server relay fallback (requires the relay server; see [GitHub Pages](#github-pages)).
 - **Real 3D board** — a hand-written WebGL2 renderer: instanced stones, soft shadows, bloom, particles, impact frames and a procedural soundtrack. No Three.js, no game framework, no runtime UI library.
-- **Installable PWA** — the shell and all assets are cached, so local and AI duels work offline.
+- **Installable PWA** — the shell and all assets are cached, so local and AI duels work offline. The manifest rotates freely between portrait and landscape, with a compact two-column menu and full-bleed board on short landscape screens.
 - **Portable static build** — relative URLs and a versioned service worker let the same files deploy to GitHub Pages, a subpath or a custom domain.
 
 ![GO/VOID menu](docs/menu.png)
@@ -47,7 +47,7 @@ Put the app behind TLS in production (`wss://`). The server is dependency-light 
 
 ## GitHub Pages
 
-The repository includes a Pages workflow that publishes `public/` on every push to `main`. All asset URLs are relative, so the site works at a project subpath as well as at a custom domain.
+The repository includes a Pages workflow that publishes `public/` on every push to `main`. All asset URLs are relative, so the site works at a project subpath as well as at a custom domain. In **Settings → Pages**, the source must be set to **GitHub Actions** (already configured for this repository).
 
 The live site is <https://boogercheeseonrye.github.io/go-void/>.
 
